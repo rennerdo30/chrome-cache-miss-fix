@@ -11,6 +11,6 @@
   "dependencies": {
     "@astrojs/starlight": "^0.37.3",
     "astro": "^5.0.0",
-    "starlight-theme-galaxy": "^0.7.0"
+    "starlight-theme-galaxy": "^0.8.0"
   }
 }
