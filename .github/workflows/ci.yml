@@ -33,14 +33,13 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Verify icons are up to date
+      # Only that the generator still runs: PNG bytes are not comparable across
+      # platforms, because the deflate output depends on the local zlib. The
+      # committed icons themselves are checked by the validator above.
+      - name: Run the icon generator
         run: |
           npm run icons
-          if ! git diff --quiet -- icons; then
-            echo "icons/ differs from tools/make-icons.mjs output; run 'npm run icons' and commit."
-            git diff --stat -- icons
-            exit 1
-          fi
+          git checkout -- icons
 
   package:
     name: Package Extension

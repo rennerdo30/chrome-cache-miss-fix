@@ -56,6 +56,32 @@ for (const path of new Set(referencedPaths)) {
   if (!existsSync(join(ROOT, path))) problems.push(`manifest references missing file: ${path}`);
 }
 
+/* --------------------------------------------------------------- icon files */
+
+const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const IHDR_WIDTH_OFFSET = 16;
+const IHDR_HEIGHT_OFFSET = 20;
+
+/** Each icon must be a real PNG whose pixel size matches the key it sits under. */
+function checkIcon(size, path) {
+  const absolute = join(ROOT, path);
+  if (!existsSync(absolute)) return; // already reported above
+  const file = readFileSync(absolute);
+  if (!file.subarray(0, PNG_SIGNATURE.length).equals(PNG_SIGNATURE)) {
+    problems.push(`${path} is not a PNG`);
+    return;
+  }
+  const width = file.readUInt32BE(IHDR_WIDTH_OFFSET);
+  const height = file.readUInt32BE(IHDR_HEIGHT_OFFSET);
+  if (width !== Number(size) || height !== Number(size)) {
+    problems.push(`${path} is ${width}x${height}, expected ${size}x${size}`);
+  }
+}
+
+for (const icons of [manifest.icons ?? {}, manifest.action?.default_icon ?? {}]) {
+  for (const [size, path] of Object.entries(icons)) checkIcon(size, path);
+}
+
 /* --------------------------------------------------------- locale completeness */
 
 const locales = readdirSync(LOCALES_DIR, { withFileTypes: true })
@@ -126,5 +152,5 @@ if (problems.length > 0) {
 }
 
 process.stdout.write(
-  `✔ manifest, ${locales.length} locale(s) and ${referenceKeys.length} message(s) look consistent\n`,
+  `✔ manifest, icons, ${locales.length} locale(s) and ${referenceKeys.length} message(s) look consistent\n`,
 );
