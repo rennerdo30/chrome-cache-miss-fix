@@ -1,0 +1,98 @@
+---
+title: Troubleshooting
+description: What to check when a tab is not repaired, or is repaired too eagerly.
+---
+
+Start with the log. Set **Log level** to **Debug** on the options page, reproduce, then read
+the log there (or export it). Every skipped navigation is logged with a reason, so most
+questions here are answered in one line.
+
+## A tab still shows ERR_CACHE_MISS
+
+**Is the extension enabled?** The popup badge says *Paused* when the master switch is off.
+
+**Is the host on a list?** A denylist entry always wins. A non-empty allowlist excludes
+everything not on it. The log says `host filtered out` with `host-denylisted` or
+`host-not-allowlisted`.
+
+**Did it run out of attempts?** After `maxAttempts` navigations the tab is left alone and
+appears under **Gave up** in the popup; the log says `giving up on tab`. Use **Retry the
+tabs I gave up on**, or raise the attempt limit.
+
+**Is the startup restriction on?** With **Only act shortly after the browser starts**
+enabled, failures outside the window are ignored — `outside-startup-window` in the log. Note
+that a lazily-restored tab you click an hour later fails *then*, long after the window has
+closed.
+
+**Was it really a cache error?** Only the errors in `CACHE_NAVIGATION_ERRORS` are recovered
+by default. Check the log line `ignoring navigation error`; if you see
+`ERR_HTTP2_PROTOCOL_ERROR`, `ERR_CONNECTION_CLOSED` or `ERR_TIMED_OUT`, enable **Also retry
+connection errors**.
+
+**Is it a subframe?** Only main-frame navigations are recovered (`not-main-frame`). An iframe
+inside a working page is out of scope.
+
+**Did the worker never start?** Open `chrome://extensions` → **Service worker** and look for
+`worker started`. If the console shows an import or syntax error instead, the worker is not
+running at all — reload the extension.
+
+## The tab reloads but I get a Cloudflare challenge
+
+Expected, and not something an extension can fix. The repair turns a cache failure into a
+real request; if the site answers that request with a challenge, you have to pass it.
+
+If you see challenges *because* of the repair — several at once after a restore — the
+stagger is too short for that site. Raise **Delay between reloads of the same site** to
+3000–5000 ms. Sites with many duplicate tabs and aggressive protection benefit most.
+
+## Tabs reload when I did not want them to
+
+Add the host to **Never these sites**. Good candidates: anything holding an unsaved form, a
+checkout flow, or a single-use URL.
+
+If tabs reload when you *click* them rather than after a failure, that is **Load known
+problem sites from the network when a restored tab is first opened** — turn it off.
+
+## Preventive mode is not doing anything
+
+The status line under the site list is the diagnosis:
+
+- **Waiting for permission: …** — click **Grant access to these sites** and accept the
+  prompt. Header modification is impossible without host access.
+- **n rule(s) active** — rules are installed. If the restore still fails, the site may set
+  its caching policy in a way that survives the rewrite, or the failure is not
+  cache-related. Check the log.
+- Nothing at all — the checkbox is off, or the site list is empty.
+
+Also confirm the host is spelled as a host: `example.com`, not a URL path or a wildcard
+pattern. Invalid lines are dropped silently when the list is normalised, so a line you
+typed vanishing on save means it was not a valid host.
+
+## Everything reloads twice
+
+You probably have both preventive reload and the reactive repair triggering on the same tab:
+the preemptive navigation starts while Chrome's own cache load is still in flight. Harmless,
+but if it bothers you, turn off the preventive reload and let the reactive path handle it.
+
+## Statistics look wrong
+
+**Tabs fixed** counts recovery navigations that ended in a completed load, not distinct
+tabs — a tab fixed on the second attempt counts once, but the same tab failing again after
+you navigate away and back counts again.
+
+**Given up on** counts tabs that exhausted their attempts *or* timed out with no observed
+outcome (45 s). A tab you closed mid-recovery is not counted at all.
+
+## Reporting a problem
+
+Export the log (options page → **Export as file**) and include:
+
+- Chrome version and OS
+- what the restore looked like — how many tabs, how many hosts
+- the `ERR_…` code from the error page
+- whether either preventive option is on
+
+:::caution
+An exported log contains the hostnames and URLs of the pages that failed. Read it before
+attaching it to a public issue.
+:::

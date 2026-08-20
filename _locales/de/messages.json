@@ -1,0 +1,134 @@
+{
+  "extensionName": { "message": "Cache-Miss-Fix für wiederhergestellte Tabs" },
+  "extensionShortName": { "message": "Cache-Miss-Fix" },
+  "extensionDescription": {
+    "message": "Reparaturhilfe für Tabs, die nach dem Wiederherstellen einer Chrome-Sitzung mit ERR_CACHE_MISS zurückkommen – pro Website zeitlich versetzt, damit geschützte Seiten nicht gedrosselt werden."
+  },
+  "actionTitle": { "message": "Cache-Miss-Fix" },
+
+  "popupStatusActive": { "message": "Überwacht Cache-Fehler" },
+  "popupStatusPaused": { "message": "Angehalten" },
+  "popupToggleLabel": { "message": "Wiederhergestellte Tabs automatisch reparieren" },
+  "popupQueued": { "message": "Wartet" },
+  "popupInFlight": { "message": "Wird geladen" },
+  "popupFailed": { "message": "Aufgegeben" },
+  "popupRecoveredTotal": { "message": "Bisher repariert" },
+  "popupLastRecovery": {
+    "message": "Letzte Reparatur: $when$",
+    "placeholders": { "when": { "content": "$1" } }
+  },
+  "popupNever": { "message": "noch keine Reparatur" },
+  "popupRetryAll": { "message": "Aufgegebene Tabs erneut versuchen" },
+  "popupNoIssues": { "message": "Derzeit keine defekten Tabs." },
+  "popupRetryStarted": {
+    "message": "$count$ Tab(s) werden erneut versucht.",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "popupOpenOptions": { "message": "Einstellungen" },
+
+  "optionsTitle": { "message": "Cache-Miss-Fix" },
+  "optionsSubtitle": {
+    "message": "Chrome stellt Hintergrund-Tabs aus dem Cache wieder her. Seiten hinter Cloudflare werden mit no-store ausgeliefert, es liegt also nichts im Cache und die Wiederherstellung scheitert mit ERR_CACHE_MISS – nur der Vordergrund-Tab wird wirklich aus dem Netz geladen. Diese Erweiterung erkennt diese Fehler und lädt die Tabs neu, eine Website nach der anderen."
+  },
+
+  "sectionGeneral": { "message": "Allgemein" },
+  "sectionRecovery": { "message": "Verhalten beim Reparieren" },
+  "sectionScope": { "message": "Welche Websites" },
+  "sectionPreventive": { "message": "Vorbeugender Modus (fortgeschritten)" },
+  "sectionStats": { "message": "Statistik" },
+  "sectionLog": { "message": "Protokoll" },
+
+  "fieldEnabled": { "message": "Wiederhergestellte Tabs automatisch reparieren" },
+  "fieldEnabledHint": { "message": "Ausschalten, um die Erweiterung installiert, aber untätig zu lassen." },
+  "fieldShowBadge": { "message": "Abzeichen anzeigen, während Tabs repariert werden" },
+  "fieldShowBadgeHint": { "message": "Das Abzeichen zählt wartende und gerade neu geladene Tabs." },
+  "fieldLogLevel": { "message": "Protokollstufe" },
+  "fieldLogLevelHint": { "message": "Debug und Trace helfen beim Melden eines Problems." },
+  "fieldTheme": { "message": "Erscheinungsbild" },
+
+  "fieldMaxAttempts": { "message": "Versuche pro Tab" },
+  "fieldMaxAttemptsHint": { "message": "Nach so vielen fehlgeschlagenen Ladevorgängen bleibt die Fehlerseite stehen." },
+  "fieldStagger": { "message": "Abstand zwischen Ladevorgängen derselben Website" },
+  "fieldStaggerHint": {
+    "message": "Viele Tabs einer geschützten Website gleichzeitig neu zu laden, führt zu einer Prüfung oder Drosselung. 1500 ms sind ein guter Standardwert."
+  },
+  "fieldNetworkErrors": { "message": "Auch Verbindungsfehler erneut versuchen" },
+  "fieldNetworkErrorsHint": {
+    "message": "Umfasst Zeitüberschreitungen, Verbindungsabbrüche und HTTP/2-Protokollfehler. Standardmäßig aus, weil dabei oft wirklich keine Verbindung besteht."
+  },
+  "fieldStartupOnly": { "message": "Nur kurz nach dem Start des Browsers eingreifen" },
+  "fieldStartupOnlyHint": { "message": "Beschränkt die Reparatur auf das Zeitfenster der Sitzungswiederherstellung." },
+  "fieldStartupWindow": { "message": "Dauer des Wiederherstellungsfensters" },
+  "fieldPreemptive": { "message": "Bekannte Problem-Websites beim ersten Öffnen eines wiederhergestellten Tabs aus dem Netz laden" },
+  "fieldPreemptiveHint": {
+    "message": "Verhindert die Fehlerseite, anstatt sie zu reparieren, kostet aber einen Ladevorgang, auch wenn der Cache genügt hätte. Gilt für Websites, die diese Erweiterung bereits reparieren musste, sowie für die Listen unten."
+  },
+
+  "fieldAllowlist": { "message": "Nur diese Websites" },
+  "fieldAllowlistHint": { "message": "Ein Host pro Zeile. Leer lassen, um alle Websites einzuschließen. Subdomains sind enthalten." },
+  "fieldDenylist": { "message": "Diese Websites nie" },
+  "fieldDenylistHint": { "message": "Ein Host pro Zeile. Hat immer Vorrang vor der Liste oben." },
+  "hostListPlaceholder": { "message": "beispiel.de" },
+
+  "preventiveIntro": {
+    "message": "Anstatt eine gescheiterte Wiederherstellung zu reparieren, wird hier der Cache-Control-Header der aufgeführten Websites so umgeschrieben, dass Chrome die Seiten zwischenspeichern darf – die Wiederherstellung gelingt dann von selbst, ohne Neuladen."
+  },
+  "preventiveWarning": {
+    "message": "Abwägung: Das HTML dieser Websites – auch von Seiten, bei denen Sie angemeldet sind – landet im Cache auf der Festplatte, und ein wiederhergestellter Tab kann kurzzeitig Inhalte bis zum gewählten Alter zeigen. Fügen Sie nur Websites hinzu, deren Zwischenspeicherung für Sie in Ordnung ist."
+  },
+  "fieldCacheableEnabled": { "message": "Cache-Control für die Websites unten umschreiben" },
+  "fieldCacheableDomains": { "message": "Websites" },
+  "fieldCacheableDomainsHint": { "message": "Ein Host pro Zeile. Für jeden ist die Berechtigung nötig, seine Antworten zu lesen und zu ändern." },
+  "fieldCacheableMaxAge": { "message": "Wie lange eine wiederhergestellte Seite verwendet werden darf" },
+  "permissionGrant": { "message": "Zugriff auf diese Websites erteilen" },
+  "permissionMissing": {
+    "message": "Berechtigung fehlt: $hosts$",
+    "placeholders": { "hosts": { "content": "$1" } }
+  },
+  "permissionGranted": { "message": "Berechtigung erteilt." },
+  "permissionDenied": { "message": "Berechtigung wurde nicht erteilt, es sind keine Regeln aktiv." },
+  "rulesActive": {
+    "message": "$count$ Regel(n) aktiv.",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "suggestionsTitle": { "message": "Websites, die mehrfach repariert werden mussten" },
+  "suggestionAdd": { "message": "Hinzufügen" },
+  "suggestionCount": {
+    "message": "$count$ Reparaturen",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+
+  "statsRecovered": { "message": "Reparierte Tabs" },
+  "statsFailed": { "message": "Aufgegeben" },
+  "statsLastRecovery": { "message": "Letzte Reparatur" },
+  "statsTopHosts": { "message": "Am häufigsten betroffen" },
+  "statsClear": { "message": "Statistik zurücksetzen" },
+  "statsEmpty": { "message": "Noch nichts erfasst." },
+
+  "logExport": { "message": "Als Datei exportieren" },
+  "logClear": { "message": "Protokoll löschen" },
+  "logEmpty": { "message": "Das Protokoll ist leer." },
+  "logRefresh": { "message": "Aktualisieren" },
+  "logFilter": { "message": "Mindestens anzeigen" },
+
+  "levelError": { "message": "Fehler" },
+  "levelWarn": { "message": "Warnung" },
+  "levelInfo": { "message": "Info" },
+  "levelDebug": { "message": "Debug" },
+  "levelTrace": { "message": "Trace" },
+
+  "themeSystem": { "message": "Wie das System" },
+  "themeLight": { "message": "Hell" },
+  "themeDark": { "message": "Dunkel" },
+
+  "unitMilliseconds": { "message": "ms" },
+  "unitMinutes": { "message": "Min." },
+  "unitSeconds": { "message": "s" },
+  "unitAttempts": { "message": "Versuche" },
+
+  "toastSaved": { "message": "Gespeichert" },
+  "toastError": {
+    "message": "Etwas ist schiefgelaufen: $detail$",
+    "placeholders": { "detail": { "content": "$1" } }
+  }
+}

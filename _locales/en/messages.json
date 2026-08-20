@@ -1,0 +1,134 @@
+{
+  "extensionName": { "message": "Cache Miss Fix for restored tabs" },
+  "extensionShortName": { "message": "Cache Miss Fix" },
+  "extensionDescription": {
+    "message": "Repairs tabs that come back as ERR_CACHE_MISS after Chrome restores a session, staggered per site so protected pages are not rate limited."
+  },
+  "actionTitle": { "message": "Cache Miss Fix" },
+
+  "popupStatusActive": { "message": "Watching for cache errors" },
+  "popupStatusPaused": { "message": "Paused" },
+  "popupToggleLabel": { "message": "Fix restored tabs automatically" },
+  "popupQueued": { "message": "Waiting" },
+  "popupInFlight": { "message": "Reloading" },
+  "popupFailed": { "message": "Gave up" },
+  "popupRecoveredTotal": { "message": "Fixed so far" },
+  "popupLastRecovery": {
+    "message": "Last fix: $when$",
+    "placeholders": { "when": { "content": "$1" } }
+  },
+  "popupNever": { "message": "no fixes yet" },
+  "popupRetryAll": { "message": "Retry the tabs I gave up on" },
+  "popupNoIssues": { "message": "No broken tabs right now." },
+  "popupRetryStarted": {
+    "message": "Retrying $count$ tab(s).",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "popupOpenOptions": { "message": "Settings" },
+
+  "optionsTitle": { "message": "Cache Miss Fix" },
+  "optionsSubtitle": {
+    "message": "Chrome restores background tabs from its cache. Pages behind Cloudflare are sent with no-store, so nothing was cached and the restore fails with ERR_CACHE_MISS — only the foreground tab gets a real network load. This extension notices those failures and re-navigates the tabs, one site at a time."
+  },
+
+  "sectionGeneral": { "message": "General" },
+  "sectionRecovery": { "message": "Recovery behaviour" },
+  "sectionScope": { "message": "Which sites" },
+  "sectionPreventive": { "message": "Preventive mode (advanced)" },
+  "sectionStats": { "message": "Statistics" },
+  "sectionLog": { "message": "Log" },
+
+  "fieldEnabled": { "message": "Fix restored tabs automatically" },
+  "fieldEnabledHint": { "message": "Turn off to keep the extension installed but idle." },
+  "fieldShowBadge": { "message": "Show a badge while tabs are being fixed" },
+  "fieldShowBadgeHint": { "message": "The badge counts tabs waiting or currently reloading." },
+  "fieldLogLevel": { "message": "Log level" },
+  "fieldLogLevelHint": { "message": "Debug and trace are useful when reporting a problem." },
+  "fieldTheme": { "message": "Appearance" },
+
+  "fieldMaxAttempts": { "message": "Attempts per tab" },
+  "fieldMaxAttemptsHint": { "message": "After this many failed reloads the error page is left alone." },
+  "fieldStagger": { "message": "Delay between reloads of the same site" },
+  "fieldStaggerHint": {
+    "message": "Reloading many tabs of one protected site at once invites a challenge or a rate limit. 1500 ms is a good default."
+  },
+  "fieldNetworkErrors": { "message": "Also retry connection errors" },
+  "fieldNetworkErrorsHint": {
+    "message": "Includes timeouts, resets and HTTP/2 protocol errors. Off by default, because these often mean the network really is unavailable."
+  },
+  "fieldStartupOnly": { "message": "Only act shortly after the browser starts" },
+  "fieldStartupOnlyHint": { "message": "Limits the fix to the session-restore window." },
+  "fieldStartupWindow": { "message": "Length of the session-restore window" },
+  "fieldPreemptive": { "message": "Load known problem sites from the network when a restored tab is first opened" },
+  "fieldPreemptiveHint": {
+    "message": "Prevents the error page instead of repairing it, but costs a network load even when the cache would have worked. Applies to sites this extension already had to fix, and to the lists below."
+  },
+
+  "fieldAllowlist": { "message": "Only these sites" },
+  "fieldAllowlistHint": { "message": "One host per line. Leave empty to cover every site. Subdomains are included." },
+  "fieldDenylist": { "message": "Never these sites" },
+  "fieldDenylistHint": { "message": "One host per line. Always wins over the list above." },
+  "hostListPlaceholder": { "message": "example.com" },
+
+  "preventiveIntro": {
+    "message": "Instead of repairing a failed restore, this rewrites the Cache-Control header of the listed sites' pages so Chrome is allowed to cache them — then the restore succeeds on its own, with no reload."
+  },
+  "preventiveWarning": {
+    "message": "Trade-off: the page HTML of these sites, including pages you are signed in to, is written to the browser cache on disk, and a restored tab may briefly show content up to the chosen age. Only add sites you are comfortable caching."
+  },
+  "fieldCacheableEnabled": { "message": "Rewrite Cache-Control for the sites below" },
+  "fieldCacheableDomains": { "message": "Sites" },
+  "fieldCacheableDomainsHint": { "message": "One host per line. Each needs permission to read and modify its responses." },
+  "fieldCacheableMaxAge": { "message": "How long a restored page may be reused" },
+  "permissionGrant": { "message": "Grant access to these sites" },
+  "permissionMissing": {
+    "message": "Waiting for permission: $hosts$",
+    "placeholders": { "hosts": { "content": "$1" } }
+  },
+  "permissionGranted": { "message": "Permission granted." },
+  "permissionDenied": { "message": "Permission was not granted, so no rules are active." },
+  "rulesActive": {
+    "message": "$count$ rule(s) active.",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "suggestionsTitle": { "message": "Sites that needed fixing repeatedly" },
+  "suggestionAdd": { "message": "Add" },
+  "suggestionCount": {
+    "message": "$count$ fixes",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+
+  "statsRecovered": { "message": "Tabs fixed" },
+  "statsFailed": { "message": "Given up on" },
+  "statsLastRecovery": { "message": "Last fix" },
+  "statsTopHosts": { "message": "Most affected sites" },
+  "statsClear": { "message": "Reset statistics" },
+  "statsEmpty": { "message": "Nothing recorded yet." },
+
+  "logExport": { "message": "Export as file" },
+  "logClear": { "message": "Clear log" },
+  "logEmpty": { "message": "The log is empty." },
+  "logRefresh": { "message": "Refresh" },
+  "logFilter": { "message": "Show at least" },
+
+  "levelError": { "message": "Error" },
+  "levelWarn": { "message": "Warning" },
+  "levelInfo": { "message": "Info" },
+  "levelDebug": { "message": "Debug" },
+  "levelTrace": { "message": "Trace" },
+
+  "themeSystem": { "message": "Follow the system" },
+  "themeLight": { "message": "Light" },
+  "themeDark": { "message": "Dark" },
+
+  "unitMilliseconds": { "message": "ms" },
+  "unitMinutes": { "message": "min" },
+  "unitSeconds": { "message": "s" },
+  "unitAttempts": { "message": "attempts" },
+
+  "toastSaved": { "message": "Saved" },
+  "toastError": {
+    "message": "Something went wrong: $detail$",
+    "placeholders": { "detail": { "content": "$1" } }
+  }
+}

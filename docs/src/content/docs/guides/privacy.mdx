@@ -1,0 +1,69 @@
+---
+title: Privacy
+description: What the extension stores, what it can see, and what never leaves your machine.
+---
+
+Nothing leaves your browser. The extension has no backend, no telemetry, and no network code
+of its own: the source contains no `fetch`, `XMLHttpRequest`, `WebSocket` or `sendBeacon`
+call and no external URL. Its only interaction with the network is asking Chrome to
+re-navigate a tab you already had open.
+
+## What it can see
+
+| Permission | What it grants | Why it is needed |
+| --- | --- | --- |
+| `webNavigation` | Navigation events for all tabs, including URL and error code | This is the signal — without it there is no way to know a restore failed. |
+| `tabs` | Tab URLs, and the ability to navigate a tab | To read the URL that failed and re-navigate that tab. |
+| `storage` | Extension-local storage | Settings, statistics, log, and the per-session queue. |
+| `alarms` | Periodic wake-ups | The watchdog that resumes the queue after the service worker is suspended. |
+| `declarativeNetRequestWithHostAccess` | Declarative request rules, limited to hosts you grant | The opt-in header rewrite only. Inert with no hosts granted. |
+| host permissions | Read and modify responses for specific hosts | **Optional**, requested at runtime, only for hosts you add to preventive mode. |
+
+There are **no content scripts**. The extension never runs code inside a page, never reads
+page content, and never touches the DOM of a site.
+
+`webNavigation` and `tabs` do mean it observes the URLs you navigate to — that is inherent
+to detecting a failed navigation. Those URLs are used to re-navigate the tab and, if the
+level is verbose enough, written to the local log. Nothing else is done with them.
+
+## What is stored, and where
+
+All of it is local to your browser profile.
+
+| Data | Storage | Lifetime |
+| --- | --- | --- |
+| Settings | `chrome.storage.local` | Until changed or the extension is removed |
+| Statistics — counts and a per-host tally of repairs | `chrome.storage.local` | Until reset or removal |
+| Log — last 2000 entries | `chrome.storage.local` | Until cleared or removal |
+| Recovery queue — tab IDs, URLs, attempt counts | `chrome.storage.session` | Cleared when the browser session ends |
+| Theme preference | `chrome.storage.local` | Until changed |
+
+The two that hold URLs are the **log** and the **queue**. The statistics keep hostnames
+only, never full URLs.
+
+### The log
+
+Log entries include the hostname and URL of pages whose navigation failed, plus timestamps.
+At `debug` and `trace` level it also records the URLs it decided *not* to act on. This is
+what makes a problem report useful — and it is why the export is worth reading before you
+attach it to a public issue.
+
+Clear it any time with **Clear log** on the options page. It is a ring buffer, so it is
+bounded at 2000 entries regardless.
+
+## Preventive mode changes the picture
+
+Rewriting `Cache-Control` for a host means that host's page HTML — including pages you are
+signed in to — is written to Chrome's on-disk cache, where it would otherwise not have been.
+That is a real trade-off, which is why the feature is off by default, per host, and gated
+behind an explicit permission grant. It is discussed in full in
+[Preventive Mode](/chrome-cache-miss-fix/guides/preventive-mode/).
+
+The preventive *reload* option has no such effect: it caches nothing and only asks Chrome
+for a page you were about to open anyway.
+
+## Removing everything
+
+Removing the extension from `chrome://extensions` deletes its settings, statistics, log,
+session state, and any `declarativeNetRequest` rules and host permissions it held. Nothing
+of it remains outside the browser profile, because nothing of it was ever anywhere else.

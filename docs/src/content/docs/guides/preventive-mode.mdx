@@ -1,0 +1,101 @@
+---
+title: Preventive Mode
+description: Rewrite Cache-Control so the restore succeeds on its own — and the trade-off that comes with it.
+---
+
+The reactive repair is a reaction: Chrome has to fail first, then the tab reloads. There is
+a way to stop the failure happening at all, and it comes with a cost worth understanding
+before you enable it.
+
+## The idea
+
+The restore fails because `Cache-Control: no-store` kept the document out of the cache. If
+that header allowed caching, the cache-first restore would find the page and succeed —
+instantly, with no reload and no error page.
+
+For hosts you nominate, the extension installs a `declarativeNetRequest` rule that rewrites
+the response headers of **main-frame documents only**:
+
+```
+cache-control: private, max-age=300      (set)
+pragma:                                  (removed)
+expires:                                 (removed)
+```
+
+`private` keeps proxies and shared caches out. `max-age` is how long a restored tab may
+reuse the stored page, and is configurable. Subresources are untouched — the rule's
+`resourceTypes` is `["main_frame"]`.
+
+## The trade-off
+
+:::caution
+Enabling this for a host writes that host's page HTML — including pages you are signed in
+to — into Chrome's on-disk cache, and lets a restored tab show content up to `max-age`
+seconds old.
+:::
+
+Concretely:
+
+- **On-disk copies.** `no-store` is often set precisely because the response contains
+  personal or session-specific content. Removing it means that HTML lands in your browser
+  cache like any other page. Anyone with access to your profile directory can read it.
+- **Staleness.** For up to `max-age` seconds, a restored tab may show what the page looked
+  like earlier rather than what it looks like now. For a dashboard that is a non-issue; for
+  a page with a balance or a queue on it, it can mislead.
+- **One-shot pages.** Anything whose URL carries a token, a nonce, or a "click once" action
+  is a bad candidate.
+
+That is why it is off by default, opt-in per host, and needs an explicit host permission
+grant. Sensible candidates are the protected sites you keep many tabs of and whose content
+is not sensitive minute to minute. Everything else is better served by the reactive repair.
+
+## Enabling it
+
+1. Open the options page → **Preventive mode (advanced)**.
+2. Tick **Rewrite Cache-Control for the sites below**.
+3. Enter one host per line. A bare domain covers its subdomains.
+4. Set **How long a restored page may be reused** (30–86400 s, default 300).
+5. Click **Grant access to these sites** and accept Chrome's permission prompt.
+
+The status line then reports how many rules are active. Rules are installed **only** for
+hosts you actually granted, and the options page names any host still waiting for
+permission — header modification is impossible without it, so a listed-but-ungranted host
+silently doing nothing would be worse than saying so.
+
+### Why a permission prompt is unavoidable
+
+`declarativeNetRequest` can block requests without host permissions, but modifying headers
+requires access to the host. The manifest asks for `declarativeNetRequestWithHostAccess`
+plus **optional** host permissions, so a fresh install requests nothing broad and you grant
+access one host at a time, when you choose to.
+
+## Suggestions
+
+The options page lists hosts the extension has had to repair at least twice, most affected
+first, with an **Add** button. That list comes from your own statistics, so it reflects the
+sites where preventive mode would actually pay off. Resetting statistics clears it.
+
+## Turning it off
+
+Untick the checkbox, or remove a host from the list — the rules are replaced immediately.
+Chrome may still hold cache entries that were written while the rule was active; clear the
+browsing cache if that matters to you.
+
+Revoking the host permission (`chrome://extensions` → Details → Site access) also stops the
+rewrite, and the extension will report the host as waiting for permission rather than
+pretend it is covered.
+
+## The other preventive option
+
+**Load known problem sites from the network when a restored tab is first opened** solves the
+same problem from the other side: no header rewriting, nothing cached, but a network request
+for a tab you have just clicked. It applies only to tabs Chrome reports as unloaded, only
+during the session-restore window, and only for hosts already known to need repair.
+
+| | Header rewrite | Preventive reload |
+| --- | --- | --- |
+| Error page ever shown | no | no |
+| Extra network request | no | yes, one per restored tab |
+| HTML cached on disk | yes | no |
+| Can show stale content | yes, up to `max-age` | no |
+| Needs host permission | yes | no |

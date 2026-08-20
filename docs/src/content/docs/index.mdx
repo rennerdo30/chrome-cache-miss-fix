@@ -1,0 +1,59 @@
+---
+title: Cache Miss Fix
+description: Chrome extension that repairs tabs failing with ERR_CACHE_MISS after a session restore.
+---
+
+Chrome's **“Continue where you left off”** brings every tab back after a restart, but it
+does not load them all the same way. The tab you left in the foreground gets a real
+network request. Every other tab is restored lazily, from the HTTP cache.
+
+Pages behind Cloudflare are served with `Cache-Control: no-store`, so the document was
+never written to that cache. There is nothing to restore from, and the navigation fails
+with `net::ERR_CACHE_MISS`. That is the pattern you see when several tabs of one protected
+site come back: exactly one works — the one that got the network load — and the rest show
+an error page.
+
+**Cache Miss Fix** watches for those failures and re-navigates the affected tabs, paced so
+the site does not see a burst of simultaneous requests from you.
+
+## What it does
+
+- **Detects** main-frame navigations that failed with a cache-layer error, via
+  `chrome.webNavigation.onErrorOccurred`.
+- **Re-navigates** the tab to the same URL, which goes to the network instead of the cache.
+- **Staggers** recoveries per host — one navigation per host per interval (1500 ms by
+  default), because ten simultaneous reloads of one Cloudflare-protected origin is a good
+  way to earn a managed challenge or a rate limit.
+- **Caps** the number of recoveries in flight at three across all hosts.
+- **Backs off** exponentially (2 s, 4 s, 8 s …) and stops after a configurable number of
+  attempts, leaving the error page rather than looping forever.
+- **Survives** its own service worker being suspended: the queue lives in
+  `chrome.storage.session` and is re-driven by an alarm.
+- **Defers** while the browser is offline, instead of burning attempts.
+- **Reports** what it did — a popup with live counters, per-host statistics, and a levelled
+  log you can export.
+
+Optionally, it can also prevent the error instead of repairing it — see
+[Preventive Mode](/chrome-cache-miss-fix/guides/preventive-mode/).
+
+## What it deliberately does not do
+
+- It does not solve Cloudflare challenges. If the fresh load answers with “Just a
+  moment…”, that is between you and the site; this extension fixes the browser-side cache
+  failure only.
+- It does not touch subframes, `chrome://` pages, or anything that is not an
+  `http:`/`https:` main-frame navigation.
+- It does not send anything anywhere. There is no backend, no telemetry, and no network
+  code of its own — see [Privacy](/chrome-cache-miss-fix/guides/privacy/).
+- It does not restore scroll position or in-page state. The failed navigation had already
+  discarded them.
+
+## Status
+
+An unpacked developer-mode extension (Manifest V3, version 1.0.0), not published on the
+Chrome Web Store. Load the folder yourself — see
+[Installation](/chrome-cache-miss-fix/getting-started/installation/).
+
+The reactive repair needs Chrome to have attempted the load before it can react, so a
+lazily-restored tab is repaired at the moment you first click it. If you would rather not
+see the error page at all, the two preventive options exist for exactly that gap.

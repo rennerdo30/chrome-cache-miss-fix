@@ -1,0 +1,72 @@
+---
+title: Installation
+description: Load Cache Miss Fix as an unpacked Manifest V3 extension in Chrome.
+---
+
+Cache Miss Fix is not on the Chrome Web Store. Load it unpacked.
+
+## Requirements
+
+- Chrome 116 or newer (`minimum_chrome_version` in the manifest). The extension uses
+  `chrome.storage.session` and Manifest V3 service workers.
+- Nothing else. There is no build step and no runtime dependency — Chrome reads the source
+  as it is.
+
+## Steps
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/rennerdo30/chrome-cache-miss-fix.git
+   ```
+
+2. Open `chrome://extensions`.
+3. Enable **Developer mode** (top right).
+4. Click **Load unpacked** and select the project folder — the directory that contains
+   `manifest.json`.
+5. Optionally pin the toolbar icon so the popup is one click away.
+
+The `docs/`, `tests/`, `tools/` and `.github/` directories are not referenced by
+`manifest.json`, so Chrome ignores them.
+
+:::note
+Chrome Stable refuses the `--load-extension` command-line flag ("not allowed in Google
+Chrome, ignoring"), so loading through `chrome://extensions` is the only route.
+:::
+
+## Verify it works
+
+The extension only acts on a navigation that has already failed, so reproducing it takes a
+session restore:
+
+1. Make sure Chrome is set to reopen your tabs: **Settings → On startup → Continue where
+   you left off**.
+2. Open the same Cloudflare-protected page in three or four tabs.
+3. Quit Chrome completely and start it again.
+4. Click through the restored tabs.
+
+Without the extension, the tabs that were not in the foreground show
+`ERR_CACHE_MISS`. With it, they reload themselves — one per host per 1500 ms — and the
+popup counts what it fixed.
+
+To confirm it is running at all, open `chrome://extensions`, click **Service worker** under
+the extension, and look for:
+
+```
+[cache-miss-fix:background] worker started
+```
+
+Set the log level to **Debug** on the options page to see each decision, including the tabs
+it deliberately skipped.
+
+## Updating
+
+Pull the repository and click the reload icon on the extension's card in
+`chrome://extensions`. Settings, statistics and the log survive a reload; the recovery queue
+does not, because it is per browser session by design.
+
+## Removing it
+
+Remove it from `chrome://extensions`. That deletes its settings, statistics, log, and any
+`declarativeNetRequest` rules it installed. Host permissions you granted for
+[Preventive Mode](/chrome-cache-miss-fix/guides/preventive-mode/) go with it.

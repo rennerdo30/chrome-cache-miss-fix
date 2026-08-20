@@ -1,0 +1,206 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cache Miss Fix — Settings</title>
+    <link rel="stylesheet" href="../ui/shared.css" />
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="page-header">
+        <div class="page-header-text">
+          <h1 data-i18n="optionsTitle">Cache Miss Fix</h1>
+          <p class="muted" data-i18n="optionsSubtitle"></p>
+        </div>
+        <label class="inline-field">
+          <span class="small muted" data-i18n="fieldTheme">Appearance</span>
+          <select id="theme">
+            <option value="system" data-i18n="themeSystem"></option>
+            <option value="light" data-i18n="themeLight"></option>
+            <option value="dark" data-i18n="themeDark"></option>
+          </select>
+        </label>
+      </header>
+
+      <section class="card">
+        <h2 data-i18n="sectionGeneral">General</h2>
+        <label class="row check">
+          <input type="checkbox" id="enabled" />
+          <span>
+            <strong data-i18n="fieldEnabled"></strong>
+            <span class="small muted" data-i18n="fieldEnabledHint"></span>
+          </span>
+        </label>
+        <label class="row check">
+          <input type="checkbox" id="showBadge" />
+          <span>
+            <strong data-i18n="fieldShowBadge"></strong>
+            <span class="small muted" data-i18n="fieldShowBadgeHint"></span>
+          </span>
+        </label>
+        <div class="row field">
+          <label for="logLevel">
+            <strong data-i18n="fieldLogLevel"></strong>
+            <span class="small muted" data-i18n="fieldLogLevelHint"></span>
+          </label>
+          <select id="logLevel"></select>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 data-i18n="sectionRecovery">Recovery behaviour</h2>
+        <div class="row field">
+          <label for="maxAttempts">
+            <strong data-i18n="fieldMaxAttempts"></strong>
+            <span class="small muted" data-i18n="fieldMaxAttemptsHint"></span>
+          </label>
+          <span class="numeric">
+            <input type="number" id="maxAttempts" />
+            <span class="unit small muted" data-i18n="unitAttempts"></span>
+          </span>
+        </div>
+        <div class="row field">
+          <label for="originStaggerMs">
+            <strong data-i18n="fieldStagger"></strong>
+            <span class="small muted" data-i18n="fieldStaggerHint"></span>
+          </label>
+          <span class="numeric">
+            <input type="number" id="originStaggerMs" step="100" />
+            <span class="unit small muted" data-i18n="unitMilliseconds"></span>
+          </span>
+        </div>
+        <label class="row check">
+          <input type="checkbox" id="recoverNetworkErrors" />
+          <span>
+            <strong data-i18n="fieldNetworkErrors"></strong>
+            <span class="small muted" data-i18n="fieldNetworkErrorsHint"></span>
+          </span>
+        </label>
+        <label class="row check">
+          <input type="checkbox" id="restrictToStartupWindow" />
+          <span>
+            <strong data-i18n="fieldStartupOnly"></strong>
+            <span class="small muted" data-i18n="fieldStartupOnlyHint"></span>
+          </span>
+        </label>
+        <div class="row field">
+          <label for="startupWindowMinutes">
+            <strong data-i18n="fieldStartupWindow"></strong>
+          </label>
+          <span class="numeric">
+            <input type="number" id="startupWindowMinutes" />
+            <span class="unit small muted" data-i18n="unitMinutes"></span>
+          </span>
+        </div>
+        <label class="row check">
+          <input type="checkbox" id="preemptiveReloadOnActivate" />
+          <span>
+            <strong data-i18n="fieldPreemptive"></strong>
+            <span class="small muted" data-i18n="fieldPreemptiveHint"></span>
+          </span>
+        </label>
+      </section>
+
+      <section class="card">
+        <h2 data-i18n="sectionScope">Which sites</h2>
+        <div class="row stacked">
+          <label for="hostAllowlist">
+            <strong data-i18n="fieldAllowlist"></strong>
+            <span class="small muted" data-i18n="fieldAllowlistHint"></span>
+          </label>
+          <textarea id="hostAllowlist" spellcheck="false"
+                    data-i18n-placeholder="hostListPlaceholder"></textarea>
+        </div>
+        <div class="row stacked">
+          <label for="hostDenylist">
+            <strong data-i18n="fieldDenylist"></strong>
+            <span class="small muted" data-i18n="fieldDenylistHint"></span>
+          </label>
+          <textarea id="hostDenylist" spellcheck="false"
+                    data-i18n-placeholder="hostListPlaceholder"></textarea>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 data-i18n="sectionPreventive">Preventive mode (advanced)</h2>
+        <p class="small muted" data-i18n="preventiveIntro"></p>
+        <p class="notice warn small" data-i18n="preventiveWarning"></p>
+        <label class="row check">
+          <input type="checkbox" id="cacheableEnabled" />
+          <span><strong data-i18n="fieldCacheableEnabled"></strong></span>
+        </label>
+        <div class="row stacked">
+          <label for="cacheableDomains">
+            <strong data-i18n="fieldCacheableDomains"></strong>
+            <span class="small muted" data-i18n="fieldCacheableDomainsHint"></span>
+          </label>
+          <textarea id="cacheableDomains" spellcheck="false"
+                    data-i18n-placeholder="hostListPlaceholder"></textarea>
+        </div>
+        <div class="row field">
+          <label for="cacheableMaxAge">
+            <strong data-i18n="fieldCacheableMaxAge"></strong>
+          </label>
+          <span class="numeric">
+            <input type="number" id="cacheableMaxAge" />
+            <span class="unit small muted" data-i18n="unitSeconds"></span>
+          </span>
+        </div>
+        <div class="row inline">
+          <button type="button" id="grant-permission" data-i18n="permissionGrant"></button>
+          <span id="permission-status" class="small muted"></span>
+        </div>
+        <div id="suggestions" hidden>
+          <h3 class="small" data-i18n="suggestionsTitle"></h3>
+          <ul id="suggestion-list" class="chips"></ul>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 data-i18n="sectionStats">Statistics</h2>
+        <dl class="stats">
+          <div>
+            <dt class="small muted" data-i18n="statsRecovered"></dt>
+            <dd id="stat-recovered">0</dd>
+          </div>
+          <div>
+            <dt class="small muted" data-i18n="statsFailed"></dt>
+            <dd id="stat-failed">0</dd>
+          </div>
+          <div>
+            <dt class="small muted" data-i18n="statsLastRecovery"></dt>
+            <dd id="stat-last">—</dd>
+          </div>
+        </dl>
+        <h3 class="small muted" data-i18n="statsTopHosts"></h3>
+        <ul id="top-hosts" class="chips"></ul>
+        <div class="row inline">
+          <button type="button" id="clear-stats" data-i18n="statsClear"></button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 data-i18n="sectionLog">Log</h2>
+        <div class="row inline">
+          <label class="inline-field">
+            <span class="small muted" data-i18n="logFilter"></span>
+            <select id="log-filter"></select>
+          </label>
+          <button type="button" id="log-refresh" data-i18n="logRefresh"></button>
+          <button type="button" id="log-export" data-i18n="logExport"></button>
+          <button type="button" id="log-clear" data-i18n="logClear"></button>
+        </div>
+        <div class="log-scroll">
+          <table class="log">
+            <tbody id="log-body"></tbody>
+          </table>
+          <p id="log-empty" class="small muted" data-i18n="logEmpty"></p>
+        </div>
+      </section>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

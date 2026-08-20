@@ -1,0 +1,190 @@
+/* Design tokens shared by the popup and the options page.
+   Light is the base palette; dark is applied for an explicit choice and for the
+   system default when the OS asks for it. */
+
+:root {
+  color-scheme: light;
+
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --surface-sunken: #f1f2f7;
+  --border: #dfe1ea;
+  --border-strong: #c4c7d4;
+  --text: #16181f;
+  --text-muted: #5c6070;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-soft: #eceafe;
+  --accent-contrast: #ffffff;
+  --danger: #b42318;
+  --danger-soft: #fdecea;
+  --warning: #8a5300;
+  --warning-soft: #fdf3e2;
+  --success: #0f7a48;
+  --success-soft: #e6f5ec;
+  --shadow: 0 1px 2px rgb(16 18 31 / 6%), 0 8px 24px rgb(16 18 31 / 6%);
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --gap-xs: 4px;
+  --gap-sm: 8px;
+  --gap: 14px;
+  --gap-lg: 22px;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --bg: #14151a;
+    --surface: #1c1e25;
+    --surface-sunken: #23252e;
+    --border: #2f323c;
+    --border-strong: #444859;
+    --text: #eceef4;
+    --text-muted: #a1a6b6;
+    --accent: #8b83ff;
+    --accent-hover: #a29bff;
+    --accent-soft: #2a2749;
+    --accent-contrast: #14151a;
+    --danger: #ff9c92;
+    --danger-soft: #3a2220;
+    --warning: #f3c37a;
+    --warning-soft: #362b18;
+    --success: #7ddba8;
+    --success-soft: #17301f;
+    --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 24px rgb(0 0 0 / 35%);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #14151a;
+  --surface: #1c1e25;
+  --surface-sunken: #23252e;
+  --border: #2f323c;
+  --border-strong: #444859;
+  --text: #eceef4;
+  --text-muted: #a1a6b6;
+  --accent: #8b83ff;
+  --accent-hover: #a29bff;
+  --accent-soft: #2a2749;
+  --accent-contrast: #14151a;
+  --danger: #ff9c92;
+  --danger-soft: #3a2220;
+  --warning: #f3c37a;
+  --warning-soft: #362b18;
+  --success: #7ddba8;
+  --success-soft: #17301f;
+  --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 24px rgb(0 0 0 / 35%);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+h1 { font-size: 19px; }
+h2 { font-size: 15px; }
+p { margin: 0; }
+
+a { color: var(--accent); }
+
+.muted { color: var(--text-muted); }
+.small { font-size: 12px; }
+.mono { font-family: var(--font-mono); }
+
+button {
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+button:hover:not(:disabled) { background: var(--surface-sunken); }
+button:disabled { opacity: 0.5; cursor: default; }
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+input[type="number"],
+input[type="text"],
+select,
+textarea {
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  width: 100%;
+}
+
+textarea {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  min-height: 84px;
+  resize: vertical;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gap-xs);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge.ok { background: var(--success-soft); color: var(--success); }
+.badge.off { background: var(--surface-sunken); color: var(--text-muted); }
+.badge.warn { background: var(--warning-soft); color: var(--warning); }
+.badge.bad { background: var(--danger-soft); color: var(--danger); }
+
+.toast {
+  position: fixed;
+  inset-block-end: 16px;
+  inset-inline-end: 16px;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 160ms ease, transform 160ms ease;
+  pointer-events: none;
+}
+
+.toast[data-visible="true"] { opacity: 1; transform: translateY(0); }
+.toast[data-kind="error"] { border-color: var(--danger); color: var(--danger); }

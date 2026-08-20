@@ -1,0 +1,38 @@
+{
+  "name": "chrome-cache-miss-fix",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chrome MV3 extension that repairs tabs failing with ERR_CACHE_MISS after a session restore",
+  "type": "module",
+  "scripts": {
+    "icons": "node tools/make-icons.mjs",
+    "validate": "node tools/validate.mjs",
+    "test": "node --test 'tests/*.test.mjs'",
+    "check": "npm run validate && npm test",
+    "install:docs": "cd docs && npm install",
+    "dev": "cd docs && npm run dev",
+    "build": "cd docs && npm run build",
+    "preview": "cd docs && npm run preview"
+  },
+  "keywords": [
+    "chrome-extension",
+    "manifest-v3",
+    "session-restore",
+    "err-cache-miss",
+    "cloudflare",
+    "declarativenetrequest"
+  ],
+  "author": "rennerdo30",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rennerdo30/chrome-cache-miss-fix.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rennerdo30/chrome-cache-miss-fix/issues"
+  },
+  "homepage": "https://rennerdo30.github.io/chrome-cache-miss-fix/",
+  "engines": {
+    "node": ">=20"
+  }
+}

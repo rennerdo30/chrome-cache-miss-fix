@@ -1,0 +1,104 @@
+---
+title: Configuration
+description: Every setting on the options page, what it changes, and when to touch it.
+---
+
+Open the options page from `chrome://extensions` → **Details → Extension options**, or via
+**Settings** in the popup. Changes save as you make them; there is no save button. Values
+outside the allowed range are clamped and written back into the field, so what you see is
+what is stored.
+
+## General
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| Fix restored tabs automatically | on | The master switch. Off keeps the extension installed but idle — no detection, no reloads. |
+| Show a badge while tabs are being fixed | on | The toolbar badge counts tabs waiting plus tabs currently reloading. |
+| Log level | Info | `error`, `warn`, `info`, `debug`, `trace`. Debug records every decision, including skips. |
+| Appearance | Follow the system | Light, dark, or follow the OS setting. |
+
+## Recovery behaviour
+
+| Setting | Default | Range | What it does |
+| --- | --- | --- | --- |
+| Attempts per tab | 3 | 1–10 | How many recovery navigations one tab may get before the error page is left alone. |
+| Delay between reloads of the same site | 1500 ms | 0–30000 | The per-host stagger. This is the setting that keeps Cloudflare from seeing a burst. |
+| Also retry connection errors | off | — | Adds timeouts, connection resets, HTTP/2 and QUIC protocol errors to the cache errors. |
+| Only act shortly after the browser starts | off | — | Restricts everything to the session-restore window. |
+| Length of the session-restore window | 5 min | 1–60 | Defines "shortly after the browser starts", and bounds the preventive reload below. |
+| Load known problem sites from the network when a restored tab is first opened | off | — | Preventive reload, described below. |
+
+### Why the stagger matters
+
+A recovery is a fresh request to a site that is, by definition, protected. Ten tabs
+reloading at once looks like a burst from one client, which is exactly what Cloudflare's
+rate limiting and managed challenges are built to catch — you would trade an error page for
+a challenge page. One navigation per host per 1500 ms keeps the repair invisible to the
+site.
+
+Recoveries are also capped at three in flight across all hosts, and failed attempts back
+off exponentially: 2 s, 4 s, 8 s, up to 30 s.
+
+### Also retry connection errors
+
+Cache errors are unambiguous — the document simply was not in the cache, and a network load
+is guaranteed to be the right answer. Connection errors are not: `ERR_TIMED_OUT` may mean
+your network is down, and retrying then just burns requests. Turn this on if your restores
+fail with `ERR_HTTP2_PROTOCOL_ERROR` or `ERR_CONNECTION_CLOSED` instead of a cache error.
+
+The full error lists live in `src/constants.js` as `CACHE_NAVIGATION_ERRORS` and
+`TRANSIENT_NETWORK_ERRORS`.
+
+### Preventive reload
+
+When a restored tab that has never been loaded in this session is activated, and its host
+is one the extension has already had to repair, load it from the network straight away
+instead of letting Chrome try the cache first. You never see the error page.
+
+It only touches tabs Chrome reports as unloaded or discarded, and only inside the
+session-restore window, so an already-loaded tab is never reloaded under you. The cost is a
+network request for a tab whose cache load might have worked.
+
+## Which sites
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| Only these sites | empty | An allowlist, one host per line. Empty means every site. |
+| Never these sites | empty | A denylist, one host per line. Always wins over the allowlist. |
+
+A bare domain covers its subdomains: `example.com` matches `example.com` and
+`www.example.com`, but never `notexample.com`. A pasted URL is reduced to its host, and a
+leading `*.` or `.` is accepted and ignored.
+
+Use the denylist for sites where an automatic reload is harmful — anything with an unsaved
+form, a payment flow, or a one-shot token in the URL.
+
+## Preventive mode
+
+Covered separately, because it is the one feature with a privacy trade-off:
+[Preventive Mode](/chrome-cache-miss-fix/guides/preventive-mode/).
+
+## Statistics and log
+
+Statistics count tabs fixed, tabs given up on, the last fix, and a per-host tally. The
+per-host tally is what drives both the preventive-reload host list and the suggestions in
+preventive mode, so resetting statistics also resets those.
+
+The log is a ring buffer of the last 2000 entries in `chrome.storage.local`. Filter it by
+level, export it as a text file, or clear it. Entries contain URLs and hostnames of pages
+that failed, which is worth knowing before you attach an export to a bug report.
+
+## Values not exposed in the UI
+
+Everything else is a named constant in `src/constants.js` — edit it and reload the
+extension.
+
+| Constant | Default | Purpose |
+| --- | --- | --- |
+| `MAX_CONCURRENT_RECOVERIES` | `3` | Recoveries in flight across all hosts. |
+| `BACKOFF_BASE_MS` / `BACKOFF_FACTOR` / `BACKOFF_MAX_MS` | `2000` / `2` / `30000` | The retry backoff curve. |
+| `RECOVERY_TIMEOUT_MS` | `45000` | A recovery with no observed outcome counts as failed. |
+| `QUEUE_ENTRY_MAX_AGE_MS` | 10 min | Queue entries older than this are dropped. |
+| `WATCHDOG_ALARM_PERIOD_MINUTES` | `0.5` | Alarm that re-drives the queue after the worker sleeps. |
+| `LOG_MAX_ENTRIES` | `2000` | Size of the persisted log ring buffer. |
+| `CACHEABLE_MAX_AGE_SECONDS_DEFAULT` | `300` | Default `max-age` for the header rewrite. |

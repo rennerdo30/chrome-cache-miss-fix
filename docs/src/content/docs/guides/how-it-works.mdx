@@ -1,0 +1,129 @@
+---
+title: How It Works
+description: The restore path that produces ERR_CACHE_MISS, and the queue that repairs it.
+---
+
+## Why a restored tab fails when a fresh one would not
+
+Session restore is not one behaviour, it is two:
+
+| Tab | How Chrome brings it back |
+| --- | --- |
+| the one that was in the foreground | a real network request |
+| every other tab | lazily, satisfied from the HTTP cache where possible |
+
+A Cloudflare-protected document is served with headers along the lines of:
+
+```http
+HTTP/2 200
+cache-control: private, no-cache, no-store, must-revalidate
+set-cookie: cf_clearance=…
+```
+
+`no-store` is an instruction never to write the response to the cache, and Chrome obeys it.
+So the cache-first restore path has nothing to read, and the navigation ends as
+`net::ERR_CACHE_MISS` — not because the network is unavailable, but because the browser
+never asked it.
+
+This is why the symptom is so lopsided. Four tabs of one protected site come back: the
+foreground one loads over the network and works, the other three read from a cache that
+never held them and fail.
+
+## The repair
+
+```
+webNavigation.onErrorOccurred
+        │
+        ▼
+  is this ours to fix?          main frame · http(s) · cache-layer error
+        │                       · host passes allow/denylist
+        ▼
+     queue (per tab)            attempts, notBefore, host
+        │
+        ▼
+      tick()                    ← timer, watchdog alarm, or a new event
+        │
+        ├── per-host gate       one navigation per host per stagger interval
+        ├── global cap          at most 3 in flight
+        ├── offline check       defer rather than burn an attempt
+        ▼
+  chrome.tabs.update(tabId, {url})     a fresh navigation — goes to the network
+        │
+        ├── onCompleted   → recovered, recorded per host
+        ├── same error    → attempts + 1, exponential backoff, or give up
+        └── silence 45 s  → treated as failed, re-queued or given up
+```
+
+`tabs.update` with the tab's own URL is the key move: unlike the restore load, it is an
+ordinary navigation, so it goes to the network and lets Cloudflare hand out a fresh
+clearance.
+
+### Pacing
+
+Everything about the timing exists to keep the repair from looking like an attack:
+
+- **Per-host stagger** — one recovery navigation per host per interval (1500 ms default).
+  This is the important one. A burst of simultaneous reloads against a protected origin is
+  what rate limiters and managed challenges are for.
+- **Global cap** — `MAX_CONCURRENT_RECOVERIES` (3) recoveries in flight at once, so a
+  restore of forty tabs across ten hosts does not become forty parallel requests.
+- **Exponential backoff** — 2 s, 4 s, 8 s … capped at 30 s, per tab.
+- **Attempt limit** — after `maxAttempts` navigations the tab is left with its error page
+  and listed in the popup, rather than reloaded forever.
+- **Offline deferral** — while `navigator.onLine` is false, nothing is issued.
+
+### Surviving the service worker
+
+Manifest V3 service workers are suspended aggressively, and the gap between a failure and
+its retry is exactly the kind of idle moment Chrome uses to do it. Two things make that
+survivable:
+
+- The whole queue — pending tabs, in-flight recoveries, per-host gates, attempt counts —
+  lives in `chrome.storage.session`, and is re-read whenever the worker starts.
+- A `chrome.alarms` watchdog fires every 30 seconds and calls `tick()`, so work resumes even
+  if the `setTimeout` that was supposed to do it died with the worker.
+
+`chrome.storage.session` is cleared when the browser session ends, which is the correct
+lifetime: a queue entry from the previous run refers to tab IDs that no longer exist.
+
+### The startup window
+
+`chrome.runtime.onStartup` records when the browser started. That timestamp is used for the
+optional "only act shortly after the browser starts" restriction and for the preventive
+reload. It deliberately does **not** clear any state: restore failures can arrive before
+`onStartup` does, and wiping the queue would drop the very tabs that had already been
+detected.
+
+## What counts as recoverable
+
+Only main-frame navigations (`frameId === 0`) on `http:` or `https:` URLs, whose error is in
+`CACHE_NAVIGATION_ERRORS`:
+
+```
+ERR_CACHE_MISS · ERR_CACHE_READ_FAILURE · ERR_CACHE_WRITE_FAILURE
+ERR_CACHE_OPERATION_NOT_SUPPORTED · ERR_CACHE_OPEN_FAILURE · ERR_CACHE_CREATE_FAILURE
+ERR_CACHE_RACE · ERR_CACHE_CHECKSUM_READ_FAILURE · ERR_CACHE_CHECKSUM_MISMATCH
+ERR_CACHE_LOCK_TIMEOUT · ERR_CACHE_AUTH_FAILURE_AFTER_READ
+ERR_CACHE_ENTRY_NOT_SUITABLE · ERR_CACHE_DOOM_FAILURE
+```
+
+Transport errors (`TRANSIENT_NETWORK_ERRORS`) are added only if you enable
+[Also retry connection errors](/chrome-cache-miss-fix/getting-started/configuration/).
+
+Every rejection is logged with a reason at debug level — `not-main-frame`,
+`unsupported-scheme`, `error-not-recoverable`, `host-denylisted`, `host-not-allowlisted`,
+`outside-startup-window`, `attempts-exhausted` — which makes "why did it not fix my tab"
+answerable from the log.
+
+## Source layout
+
+| File | Responsibility |
+| --- | --- |
+| `src/background.js` | Service worker. Registers every listener synchronously at the top level, because these events are what start the worker. |
+| `src/recovery.js` | `RecoveryController`: detection, queue, pacing, backoff, give-up, persistence. All clock and `chrome` access is injectable, which is what makes it testable. |
+| `src/cacheable-rules.js` | The opt-in `declarativeNetRequest` header rewrite. |
+| `src/settings.js` | Settings and statistics, validated and clamped on read and write. |
+| `src/host-match.js` | Hostname and URL helpers, including the suffix matching used by the lists. |
+| `src/logger.js` | Levelled logging to the console and to a persisted ring buffer. |
+| `src/constants.js` | Every tunable, limit, key and error name. |
+| `src/popup/`, `src/options/`, `src/ui/` | The two extension pages and their shared design tokens. |

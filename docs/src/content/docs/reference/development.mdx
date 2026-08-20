@@ -1,0 +1,115 @@
+---
+title: Development
+description: Repository layout, the test approach, and how to change things safely.
+---
+
+No build step, no bundler, no runtime dependency. Chrome loads the source directly; ES
+modules work in both the service worker (`"type": "module"`) and the extension pages. The
+only dependencies in the repository belong to this documentation site.
+
+## Commands
+
+```bash
+npm run validate       # manifest references, locale parity, unused/undefined messages
+npm test               # node:test suite for the recovery logic
+npm run check          # both of the above
+npm run icons          # regenerate icons/*.png
+
+npm run install:docs   # install this site's dependencies
+npm run dev            # local docs preview
+npm run build          # production docs build into docs/dist
+```
+
+`npm run check` is what CI runs on every push and pull request.
+
+## Layout
+
+```
+manifest.json          Manifest V3, no content scripts
+src/
+  background.js        service worker: wires Chrome events to the controller
+  recovery.js          the queue: detection, pacing, backoff, give-up, persistence
+  cacheable-rules.js   opt-in Cache-Control rewrite (declarativeNetRequest)
+  settings.js          validated settings and statistics storage
+  host-match.js        hostname/URL helpers
+  logger.js            levelled logging: console + persisted ring buffer
+  constants.js         every tunable, limit, key and error name
+  popup/               toolbar popup
+  options/             settings, statistics, log viewer
+  ui/                  i18n and theme helpers, shared design tokens
+_locales/{en,de}/      all user-facing text
+tools/
+  make-icons.mjs       dependency-free PNG generator
+  validate.mjs         static checks
+tests/
+  fake-chrome.mjs      chrome API stub + manual clock
+  recovery.test.mjs    the suite
+docs/                  this site (Astro Starlight)
+```
+
+## Testing without a browser
+
+`RecoveryController` takes its clock and its collaborators as constructor arguments:
+
+```js
+const controller = new RecoveryController({
+  logger, getSettings, recordOutcome,
+  now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+  isOnline: () => true,
+});
+```
+
+`tests/fake-chrome.mjs` supplies a `chrome` stub (`storage.local`, `storage.session`,
+`tabs.get`, `tabs.update`) and a manual clock whose timers only fire when a test advances
+it. That makes the parts most likely to break verifiable in milliseconds:
+
+- a cache error produces exactly one navigation
+- two tabs of one host are staggered, not fired together
+- different hosts run in parallel, but the global cap holds
+- subframes, non-`http(s)` schemes and unrelated errors are ignored
+- allowlist and denylist decisions
+- exponential backoff, the attempt limit, and the manual retry
+- a recovery with no outcome is re-queued after the timeout
+- a fresh controller resumes the queue from `chrome.storage.session`
+
+Retry timers return their promise from the callback so a test clock can await a tick;
+`setTimeout` ignores the return value, so production behaviour is unchanged.
+
+## Conventions
+
+- **No magic values.** Every number, key, header name and error string lives in
+  `src/constants.js`. If you need a new tunable, add it there with a comment saying what it
+  is for.
+- **No user-facing string in code.** All text goes through `chrome.i18n` from
+  `_locales/en` and `_locales/de`, with placeholders rather than concatenation, and `Intl`
+  for numbers and dates. `npm run validate` fails on a key that is missing from a locale,
+  defined but unused, or used but undefined.
+- **Errors are handled and logged.** `chrome` calls are wrapped; a failure to persist state
+  or write a log must never break a repair.
+- **Both themes.** The extension pages define light and dark palettes as CSS custom
+  properties in `src/ui/shared.css` and follow the system preference by default.
+
+## Adding a locale
+
+1. Copy `_locales/en/messages.json` to `_locales/<code>/messages.json` and translate the
+   values, keeping keys and placeholder names identical.
+2. Run `npm run validate` — it checks key parity and placeholder names against `en`.
+
+## Changing the recovery behaviour
+
+Behaviour lives in `RecoveryController`. Two rules keep it honest:
+
+1. Add or change a test in `tests/recovery.test.mjs` for anything about timing. The pacing
+   is the part that protects users from tripping a site's rate limiting, and it is easy to
+   break by accident.
+2. Register `chrome.*` listeners synchronously at the top level of `background.js`. Those
+   events are what start the service worker; a listener registered inside an `await` chain
+   can miss the event that woke it.
+
+## Icons
+
+`tools/make-icons.mjs` describes the artwork analytically — a squircle plate, a broken ring
+and an arrowhead — and samples it with 4×4 supersampling, writing PNGs with `node:zlib` and
+a hand-rolled CRC. No image dependency, and every size is drawn at full resolution rather
+than scaled. Geometry constants are at the top of the file; `npm run icons` re-renders all
+four sizes.

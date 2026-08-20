@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Cache Miss Fix</title>
+    <link rel="stylesheet" href="../ui/shared.css" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header class="popup-header">
+        <h1 data-i18n="extensionShortName">Cache Miss Fix</h1>
+        <span id="status-badge" class="badge off"></span>
+      </header>
+
+      <label class="switch">
+        <input type="checkbox" id="enabled" />
+        <span data-i18n="popupToggleLabel">Fix restored tabs automatically</span>
+      </label>
+
+      <ul class="counters">
+        <li>
+          <span class="counter-value" id="count-queued">0</span>
+          <span class="small muted" data-i18n="popupQueued">Waiting</span>
+        </li>
+        <li>
+          <span class="counter-value" id="count-inflight">0</span>
+          <span class="small muted" data-i18n="popupInFlight">Reloading</span>
+        </li>
+        <li>
+          <span class="counter-value" id="count-failed">0</span>
+          <span class="small muted" data-i18n="popupFailed">Gave up</span>
+        </li>
+        <li>
+          <span class="counter-value" id="count-recovered">0</span>
+          <span class="small muted" data-i18n="popupRecoveredTotal">Fixed so far</span>
+        </li>
+      </ul>
+
+      <p id="last-recovery" class="small muted"></p>
+      <ul id="failed-list" class="failed-list small" hidden></ul>
+      <p id="no-issues" class="small muted" data-i18n="popupNoIssues" hidden></p>
+
+      <div class="actions">
+        <button type="button" id="retry-all" class="primary" data-i18n="popupRetryAll"></button>
+        <button type="button" id="open-options" data-i18n="popupOpenOptions"></button>
+      </div>
+    </main>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
