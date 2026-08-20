@@ -33,6 +33,6 @@
   },
   "homepage": "https://rennerdo30.github.io/chrome-cache-miss-fix/",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }

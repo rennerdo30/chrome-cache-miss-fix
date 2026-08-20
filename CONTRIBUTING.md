@@ -8,7 +8,7 @@ takes about a minute.
 ### Prerequisites
 
 - Chrome 116 or newer
-- Node.js 20 or newer (for the tests, the validator, and the docs site)
+- Node.js 22.12 or newer (for the tests, the validator, and the docs site)
 - Git
 
 ### Set up
