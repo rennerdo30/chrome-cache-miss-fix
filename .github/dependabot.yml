@@ -1,21 +1,32 @@
+# Dependabot configuration.
+#
+# Every version update across all ecosystems lands in ONE pull request per
+# week (a multi-ecosystem group), so the review queue never holds more than
+# one dependency PR. A short cooldown skips releases that are only hours old.
+# Security updates are not delayed and arrive as soon as an advisory matches.
 version: 2
-updates:
-  # Keep docs site dependencies up to date
-  - package-ecosystem: "npm"
-    directory: "/docs"
+
+multi-ecosystem-groups:
+  weekly-dependencies:
     schedule:
       interval: "weekly"
+      day: "monday"
     commit-message:
-      prefix: "deps(docs):"
-    labels:
-      - "dependencies"
+      prefix: "deps"
 
-  # GitHub Actions
+updates:
+  - package-ecosystem: "npm"
+    directories:
+      - "/"
+      - "/docs"
+    patterns: ["*"]
+    multi-ecosystem-group: "weekly-dependencies"
+    cooldown:
+      default-days: 3
+
   - package-ecosystem: "github-actions"
     directory: "/"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "deps(actions):"
-    labels:
-      - "dependencies"
+    patterns: ["*"]
+    multi-ecosystem-group: "weekly-dependencies"
+    cooldown:
+      default-days: 3
